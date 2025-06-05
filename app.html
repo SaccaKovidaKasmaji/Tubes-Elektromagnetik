@@ -18,6 +18,7 @@
     h1 {
       font-size: 36px;
       margin-bottom: 20px;
+      color: #0288d1; /* Changed title color to match button background */
     }
     .status {
       font-weight: bold;
@@ -46,6 +47,11 @@
       border: 1px solid #ccc;
       border-radius: 6px;
       width: 80px;
+    }
+    .button-container {
+      display: flex;
+      justify-content: center; /* Center the buttons */
+      gap: 10px;
     }
     button {
       background-color: #0288d1;
@@ -93,7 +99,7 @@
       <label>Predict θᵣ (deg): <input type="number" id="guessR"></label>
       <label>Predict θₜ (deg): <input type="number" id="guessT"></label>
     </div>
-    <div style="display: flex; gap: 10px;">
+    <div class="button-container">
       <button onclick="submitAnswer()">Submit Answer</button>
       <button onclick="generateChallenge()">New Challenge</button>
     </div>
@@ -243,8 +249,10 @@
         updateChallengeInfo();
         if (lives === 0) {
           alert("💀 Game Over! Final Score: " + score);
-          // Redirect to home page
-          window.location.href = 'index.html'; // Change to your home page filename
+          // Redirect to home page after a short delay
+          setTimeout(() => {
+            window.location.href = 'index.html'; // Change to your home page filename
+          }, 2000); // 2 seconds delay
         } else {
           document.getElementById("output").textContent = result;
           drawWave(currentN1, currentN2, currentAngle, true, correctT);

@@ -95,14 +95,16 @@
       const scoreList = document.getElementById('scoreList');
       scoreList.innerHTML = ""; // Clear existing scores
 
-      // Get the player's name and score from cookies
-      const playerName = getCookie('playerName');
-      const playerScore = getCookie('playerScore');
+      // Get scores from cookies
+      const scores = JSON.parse(getCookie('scores') || '[]');
 
-      // If the player has a score, display it
-      if (playerName) {
+      // Sort scores in descending order
+      scores.sort((a, b) => b.score - a.score);
+
+      // Display top 3 scores
+      for (let i = 0; i < Math.min(3, scores.length); i++) {
         const li = document.createElement('li');
-        li.textContent = `${playerName}: ${playerScore || 0}`; // Default to 0 if no score
+        li.textContent = `${scores[i].name}: ${scores[i].score}`;
         scoreList.appendChild(li);
       }
     }

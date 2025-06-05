@@ -249,8 +249,8 @@
         updateChallengeInfo();
         if (lives === 0) {
           alert("💀 Game Over! Final Score: " + score);
-          // Update the score cookie
-          setCookie('playerScore', score, 7); // Store the final score for 7 days
+          // Update the scores cookie
+          updateScoresCookie(score); // Store the final score
           // Redirect to home page after a short delay
           setTimeout(() => {
             window.location.href = 'index.html'; // Change to your home page filename
@@ -270,67 +270,23 @@
       }
     }
 
-    function drawAnswerKey(n1, n2, angleIdeg, answerT) {
-      const answerCanvas = document.getElementById('answerCanvas');
-      const ctx = answerCanvas.getContext('2d');
-      ctx.clearRect(0, 0, answerCanvas.width, answerCanvas.height);
+    function updateScoresCookie(newScore) {
+      const playerName = getCookie('playerName');
+      const scores = JSON.parse(getCookie('scores') || '[]');
 
-      const angleI = toRad(angleIdeg);
-      const sinT2 = n1 / n2 * Math.sin(angleI);
+      // Add new score to scores array
+      scores.push({ name: playerName, score: newScore });
 
-      // Draw the baseline
-      ctx.beginPath();
-      ctx.moveTo(0, 200);
-      ctx.lineTo(600, 200);
-      ctx.strokeStyle = "black";
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      // Sort scores in descending order
+      scores.sort((a, b) => b.score - a.score);
 
-      // Draw the normal line
-      ctx.beginPath();
-      ctx.setLineDash([5, 5]);
-      ctx.moveTo(300, 0);
-      ctx.lineTo(300, 400);
-      ctx.strokeStyle = "gray";
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Draw incoming wave
-      ctx.beginPath();
-      ctx.moveTo(300 - 150 * Math.sin(angleI), 200 - 150 * Math.cos(angleI));
-      ctx.lineTo(300, 200);
-      ctx.strokeStyle = "blue";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = "#0288d1";
-      ctx.font = "16px Segoe UI";
-      ctx.fillText("Incoming wave", 300 - 140 * Math.sin(angleI), 200 - 140 * Math.cos(angleI) - 10);
-
-      // Draw reflected wave
-      ctx.beginPath();
-      ctx.moveTo(300, 200);
-      ctx.lineTo(300 - 150 * Math.sin(angleI), 200 + 150 * Math.cos(angleI));
-      ctx.strokeStyle = "red";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = "red";
-      ctx.fillText("Reflected wave (θᵣ = " + (angleIdeg).toFixed(1) + "°)", 300 - 140 * Math.sin(angleI), 200 + 140 * Math.cos(angleI) + 40); // Adjusted position
-
-      // Draw refracted wave if it exists
-      if (answerT !== null) {
-        const angleT = toRad(answerT);
-        ctx.beginPath();
-        ctx.moveTo(300, 200);
-        ctx.lineTo(300 + 150 * Math.sin(angleT), 200 + 150 * Math.cos(angleT));
-        ctx.strokeStyle = "green";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = "green";
-        ctx.fillText("Refracted wave (θₜ = " + (answerT === 0 ? "0°" : answerT.toFixed(1)) + ")", 300 + 140 * Math.sin(angleT), 200 + 140 * Math.cos(angleT) + 20); // Adjusted position
-      } else {
-        ctx.fillStyle = "green";
-        ctx.fillText("Refracted wave (θₜ = 0°)", 300 + 140, 200 + 20); // Indicate TIR
+      // Keep only top 3 scores
+      if (scores.length > 3) {
+        scores.splice(3);
       }
+
+      // Save updated scores back to cookie
+      setCookie('scores', JSON.stringify(scores), 7); // Store for 7 days
     }
 
     // Function to set a cookie

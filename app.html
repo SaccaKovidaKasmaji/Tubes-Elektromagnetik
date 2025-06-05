@@ -1,4 +1,3 @@
-```
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -259,5 +258,104 @@
         } else {
           document.getElementById("output").textContent = result;
           drawWave(currentN1, currentN2, currentAngle, true, correctT);
-          document.getElementById("
-```
+          document.getElementById("answerKey").style.display = "block"; // Show answer key after submission
+          drawAnswerKey(currentN1, currentN2, currentAngle, correctT); // Draw the answer key graphics
+        }
+      } else {
+        document.getElementById("correctSound").play();
+        updateChallengeInfo();
+        document.getElementById("output").textContent = result;
+        document.getElementById("answerKey").style.display = "block"; // Show answer key after submission
+        drawAnswerKey(currentN1, currentN2, currentAngle, correctT); // Draw the answer key graphics
+      }
+    }
+
+    function drawAnswerKey(n1, n2, angleIdeg, answerT) {
+      const answerCanvas = document.getElementById('answerCanvas');
+      const ctx = answerCanvas.getContext('2d');
+      ctx.clearRect(0, 0, answerCanvas.width, answerCanvas.height);
+
+      const angleI = toRad(angleIdeg);
+      const sinT2 = n1 / n2 * Math.sin(angleI);
+
+      // Draw the baseline
+      ctx.beginPath();
+      ctx.moveTo(0, 200);
+      ctx.lineTo(600, 200);
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Draw the normal line
+      ctx.beginPath();
+      ctx.setLineDash([5, 5]);
+      ctx.moveTo(300, 0);
+      ctx.lineTo(300, 400);
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw incoming wave
+      ctx.beginPath();
+      ctx.moveTo(300 - 150 * Math.sin(angleI), 200 - 150 * Math.cos(angleI));
+      ctx.lineTo(300, 200);
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = "#0288d1";
+      ctx.font = "16px Segoe UI";
+      ctx.fillText("Incoming wave", 300 - 140 * Math.sin(angleI), 200 - 140 * Math.cos(angleI) - 10);
+
+      // Draw reflected wave
+      ctx.beginPath();
+      ctx.moveTo(300, 200);
+      ctx.lineTo(300 - 150 * Math.sin(angleI), 200 + 150 * Math.cos(angleI));
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = "red";
+      ctx.fillText("Reflected wave (θᵣ = " + (angleIdeg).toFixed(1) + "°)", 300 - 140 * Math.sin(angleI), 200 + 140 * Math.cos(angleI) + 40); // Adjusted position
+
+      // Draw refracted wave if it exists
+      if (answerT !== null) {
+        const angleT = toRad(answerT);
+        ctx.beginPath();
+        ctx.moveTo(300, 200);
+        ctx.lineTo(300 + 150 * Math.sin(angleT), 200 + 150 * Math.cos(angleT));
+        ctx.strokeStyle = "green";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = "green";
+        ctx.fillText("Refracted wave (θₜ = " + (answerT === 0 ? "0°" : answerT.toFixed(1)) + ")", 300 + 140 * Math.sin(angleT), 200 + 140 * Math.cos(angleT) + 20); // Adjusted position
+      } else {
+        ctx.fillStyle = "green";
+        ctx.fillText("Refracted wave (θₜ = 0°)", 300 + 140, 200 + 20); // Indicate TIR
+      }
+    }
+
+    // Function to set a cookie
+    function setCookie(name, value, days) {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+    }
+
+    // Function to get a cookie
+    function getCookie(name) {
+      return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+      }, '');
+    }
+
+    // Load player score from cookies
+    window.onload = function() {
+      const playerScore = getCookie('playerScore');
+      if (playerScore) {
+        score = parseInt(playerScore);
+        document.getElementById("score").textContent = score;
+      }
+      generateChallenge(); // Start with a new challenge
+    };
+  </script>
+</body>
+</html>

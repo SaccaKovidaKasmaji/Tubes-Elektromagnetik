@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,26 +77,44 @@
   </div>
 
   <script>
-    // Empty leaderboard data
-    const scores = [];
+    // Function to set a cookie
+    function setCookie(name, value, days) {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+    }
+
+    // Function to get a cookie
+    function getCookie(name) {
+      return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+      }, '');
+    }
 
     // Function to display the leaderboard
     function displayLeaderboard() {
       const scoreList = document.getElementById('scoreList');
       scoreList.innerHTML = ""; // Clear existing scores
-      scores.forEach(entry => {
+
+      // Get the player's name and score from cookies
+      const playerName = getCookie('playerName');
+      const playerScore = getCookie('playerScore');
+
+      // If the player has a score, display it
+      if (playerName) {
         const li = document.createElement('li');
-        li.textContent = `${entry.name}: ${entry.score}`;
+        li.textContent = `${playerName}: ${playerScore || 0}`; // Default to 0 if no score
         scoreList.appendChild(li);
-      });
+      }
     }
 
     // Function to start the game
     function startGame() {
       const playerName = document.getElementById('playerName').value;
       if (playerName) {
-        // Redirect to the game page with the player's name
-        localStorage.setItem('playerName', playerName); // Store player name
+        // Set the player name cookie
+        setCookie('playerName', playerName, 7); // Store player name for 7 days
+        setCookie('playerScore', 0, 7); // Initialize score to 0
         window.location.href = 'app.html'; // Change to your game page filename
       } else {
         alert("Please enter your name!");

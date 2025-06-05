@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snell's Law Game Challenge</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background: url('https://images.unsplash.com/photo-1549921296-3a6b5beea6c9?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+    }
+    h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+    .status {
+      font-weight: bold;
+      font-size: 18px;
+      color: #006064;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px 20px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .game {
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    label {
+      margin: 10px;
+      font-weight: bold;
+      color: #01579b;
+    }
+    input {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: 80px;
+    }
+    button {
+      background-color: #0288d1;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      font-size: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #01579b;
+    }
+    canvas {
+      background-color: #fefefe;
+      border: 2px solid #01579b;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    #output {
+      margin-top: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #006064;
+      white-space: pre-line;
+      text-align: center;
+    }
+    #answerKey {
+      display: none; /* Initially hidden */
+      margin-top: 15px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="welcomeMessage">Welcome to Snell's Law Game Challenge!</h1>
+  <div class="status">
+    <div id="challengeInfo">Challenge: n₁=?, n₂=?, θᵢ=?°</div>
+    <div>Score: <span id="score">0</span> | Lives: <span id="hearts">❤️❤️❤️</span></div>
+  </div>
+
+  <div class="game">
+    <div style="margin-bottom: 10px;">
+      <label>Predict θᵣ (deg): <input type="number" id="guessR"></label>
+      <label>Predict θₜ (deg): <input type="number" id="guessT"></label>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button onclick="submitAnswer()">Submit Answer</button>
+      <button onclick="generateChallenge()">New Challenge</button>
+    </div>
+    <div id="answerKey">
+      <h3>Transmitted Wave Answer Key</h3>
+      <canvas id="answerCanvas" width="600" height="400"></canvas>
+    </div>
+  </div>
+
+  <p id="output"></p>
+
+  <audio id="correctSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+  <audio id="wrongSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+
+  <script>
+    let correctR = 0;
+    let correctT = 0;
+    let score = 0;
+    let lives = 3;
+    let currentN1 = 0;
+    let currentN2 = 0;
+    let currentAngle = 0;
+
+    function toRad(deg) {
+      return deg * Math.PI / 180;
+    }
+    function toDeg(rad) {
+      return rad * 180 / Math.PI;
+    }
+
+    function generateChallenge() {
+      const n1 = +(Math.random() * (2.0 - 1.0) + 1.0).toFixed(2);
+      const n2 = +(Math.random() * (2.5 - 1.0) + 1.0).toFixed(2);
+      const angleIdeg = Math.floor(Math.random() * 80) + 5;
+      currentN1 = n1;
+      currentN2 = n2;
+      currentAngle = angleIdeg;
+      document.getElementById("guessR").value = "";
+      document.getElementById("guessT").value = "";
+      updateChallengeInfo();
+      drawWave(n1, n2, angleIdeg);
+      document.getElementById("answerKey").style.display = "none"; // Hide answer key when new challenge is generated
+    }
+
+    function updateChallengeInfo() {
+      document.getElementById("challengeInfo").textContent = `Challenge: n₁=${currentN1}, n₂=${currentN2}, θᵢ=${currentAngle}°`;
+      document.getElementById("score").textContent = score;
+      document.getElementById("hearts").textContent = "❤️".repeat(lives);
+    }
+
+    function drawWave(n1, n2, angleIdeg, showAnswer = false, answerT = null) {
+      const canvas = document.getElementById('answerCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const angleI = toRad(angleIdeg);
+      const sinT2 = n1 / n2 * Math.sin(angleI);
+
+      ctx.beginPath();
+      ctx.moveTo(0, 200);
+      ctx.lineTo(600, 200);
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.setLineDash([5, 5]);
+      ctx.moveTo(300, 0);
+      ctx.lineTo(300, 400);
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.beginPath();
+      ctx.moveTo(300 - 150 * Math.sin(angleI), 200 - 150 * Math.cos(angleI));
+      ctx.lineTo(300, 200);
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#0288d1";
+      ctx.font = "16px Segoe UI";
+      ctx.fillText("Incoming wave", 300 - 140 * Math.sin(angleI), 200 - 140 * Math.cos(angleI) - 10);
+
+      if (showAnswer && answerT !== null) {
+        const angleT = toRad(answerT);
+        ctx.beginPath();
+        ctx.moveTo(300, 200);
+        ctx.lineTo(300 + 150 * Math.sin(angleT), 200 + 150 * Math.cos(angleT));
+        ctx.strokeStyle = "green";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "green";
+        ctx.fillText("Refracted wave (θₜ = " + answerT.toFixed(1) + "°)", 300 + 140 * Math.sin(angleT), 200 + 140 * Math.cos(angleT) + 20);
+      }
+
+      correctR = angleIdeg;
+      if (Math.abs(sinT2) > 1) {
+        correctT = null;
+        document.getElementById("output").textContent = `TIR! Refracted angle does not exist.`;
+        return;
+      }
+      const angleT = Math.asin(sinT2);
+      correctT = toDeg(angleT);
+      document.getElementById("output").textContent = "";
+    }
+
+    function submitAnswer() {
+      const guessR = parseFloat(document.getElementById('guessR').value);
+      const guessT = parseFloat(document.getElementById('guessT').value);
+      let result = "";
+      let correct = true;
+
+      // Check reflected angle
+      if (Math.abs(guessR - correctR) <= 2) {
+        score += 10;
+        result += `✅ Reflected angle correct! (+10)\n`;
+      } else {
+        result += `❌ Reflected angle (θᵣ) wrong. Should be ${correctR.toFixed(1)}°\n`;
+        correct = false;
+      }
+
+      // Check refracted angle or TIR
+      if (correctT === null) {
+        if (isNaN(guessT)) {
+          score += 10;
+          result += `✅ Correctly identified TIR! (+10)`;
+        } else {
+          result += `❌ Should be TIR (no angle)!`;
+          correct = false;
+        }
+      } else {
+        if (Math.abs(guessT - correctT) <= 2) {
+          score += 10;
+          result += `✅ Refracted angle correct! (+10)`;
+        } else {
+          result += `❌ Refracted angle (θₜ) wrong. Should be ${correctT.toFixed(1)}°`;
+          correct = false;
+        }
+      }
+
+      // Update lives and handle game over
+      if (!correct) {
+        lives--;
+        document.getElementById("wrongSound").play();
+        updateChallengeInfo();
+        if (lives === 0) {
+          alert("💀 Game Over! Final Score: " + score);
+          // Redirect to home page
+          window.location.href = 'home.html'; // Change to your home page filename
+        } else {
+          document.getElementById("output").textContent = result;
+          drawWave(currentN1, currentN2, currentAngle, true, correctT);
+          document.getElementById("answerKey").style.display = "block"; // Show answer key after submission
+          drawAnswerKey(currentN1, currentN2, currentAngle, correctT); // Draw the answer key graphics
+        }
+      } else {
+        document.getElementById("correctSound").play();
+        updateChallengeInfo();
+        document.getElementById("output").textContent = result;
+        document.getElementById("answerKey").style.display = "block"; // Show answer key after submission
+        drawAnswerKey(currentN1, currentN2, currentAngle, correctT); // Draw the answer key graphics
+      }
+    }
+
+    function drawAnswerKey(n1, n2, angleIdeg, answerT) {
+      const answerCanvas = document.getElementById('answerCanvas');
+      const ctx = answerCanvas.getContext('2d');
+      ctx.clearRect(0, 0, answerCanvas.width, answerCanvas.height);
+
+      const angleI = toRad(angleIdeg);
+      const sinT2 = n1 / n2 * Math.sin(angleI);
+
+      // Draw the baseline
+      ctx.beginPath();
+      ctx.moveTo(0, 200);
+      ctx.lineTo(600, 200);
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Draw the normal line
+      ctx.beginPath();
+      ctx.setLineDash([5, 5]);
+      ctx.moveTo(300, 0);
+      ctx.lineTo(300, 400);
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw incoming wave
+      ctx.beginPath();
+      ctx.moveTo(300 - 150 * Math.sin(angleI), 200 - 150 * Math.cos(angleI));
+      ctx.lineTo(300, 200);
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = "#0288d1";
+      ctx.font = "16px Segoe UI";
+      ctx.fillText("Incoming wave", 300 - 140 * Math.sin(angleI), 200 - 140 * Math.cos(angleI) - 10);
+
+      // Draw reflected wave
+      ctx.beginPath();
+      ctx.moveTo(300, 200);
+      ctx.lineTo(300 - 150 * Math.sin(angleI), 200 + 150 * Math.cos(angleI));
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = "red";
+      ctx.fillText("Reflected wave (θᵣ = " + (angleIdeg).toFixed(1) + "°)", 300 - 140 * Math.sin(angleI), 200 + 140 * Math.cos(angleI) + 40); // Adjusted position
+
+      // Draw refracted wave if it exists
+      if (answerT !== null) {
+        const angleT = toRad(answerT);
+        ctx.beginPath();
+        ctx.moveTo(300, 200);
+        ctx.lineTo(300 + 150 * Math.sin(angleT), 200 + 150 * Math.cos(angleT));
+        ctx.strokeStyle = "green";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = "green";
+        ctx.fillText("Refracted wave (θₜ = " + (answerT === 0 ? "0°" : answerT.toFixed(1)) + ")", 300 + 140 * Math.sin(angleT), 200 + 140 * Math.cos(angleT) + 20); // Adjusted position
+      } else {
+        ctx.fillStyle = "green";
+        ctx.fillText("Refracted wave (θₜ = 0°)", 300 + 140, 200 + 20); // Indicate TIR
+      }
+    }
+  </script>
+</body>
+</html>

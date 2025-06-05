@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snell's Law Game Challenge</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: url('https://images.unsplash.com/photo-1549921296-3a6b5beea6c9?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+    }
+    h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 24px;
+      margin-bottom: 40px;
+    }
+    input {
+      padding: 10px;
+      font-size: 18px;
+      border-radius: 5px;
+      border: none;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #0288d1;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 20px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #01579b;
+    }
+    #leaderboard {
+      margin-top: 30px;
+      background-color: rgba(255, 255, 255, 0.8);
+      color: black;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    #leaderboard h2 {
+      margin: 0 0 10px 0;
+    }
+    #leaderboard ul {
+      list-style-type: none;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Snell's Law Game Challenge</h1>
+  <p>Enter your name to start playing!</p>
+  <input type="text" id="playerName" placeholder="Your Name" />
+  <button onclick="startGame()">Start Game</button>
+
+  <div id="leaderboard">
+    <h2>Top Scores</h2>
+    <ul id="scoreList">
+      <!-- Scores will be dynamically added here -->
+    </ul>
+  </div>
+
+  <script>
+    // Sample leaderboard data
+    const scores = [
+      { name: "Alice", score: 100 },
+      { name: "Bob", score: 90 },
+      { name: "Charlie", score: 80 },
+    ];
+
+    // Function to display the leaderboard
+    function displayLeaderboard() {
+      const scoreList = document.getElementById('scoreList');
+      scoreList.innerHTML = ""; // Clear existing scores
+      scores.forEach(entry => {
+        const li = document.createElement('li');
+        li.textContent = `${entry.name}: ${entry.score}`;
+        scoreList.appendChild(li);
+      });
+    }
+
+    // Function to start the game
+    function startGame() {
+      const playerName = document.getElementById('playerName').value;
+      if (playerName) {
+        // Redirect to the game page with the player's name
+        localStorage.setItem('playerName', playerName); // Store player name
+        window.location.href = 'app.html'; // Change to your game page filename
+      } else {
+        alert("Please enter your name!");
+      }
+    }
+
+    // Display the leaderboard on page load
+    displayLeaderboard();
+  </script>
+</body>
+</html>

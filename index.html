@@ -1,129 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Snell's Law Game Challenge</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wave Refraction Game</title>
   <style>
     body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: url('https://images.unsplash.com/photo-1549921296-3a6b5beea6c9?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-      text-align: center;
+      margin: 0;
+      background-color: #cfe9f1;
+      font-family: sans-serif;
+      overflow: hidden;
     }
-    h1 {
-      font-size: 48px;
-      margin-bottom: 20px;
-      color: #0288d1; /* Changed title color to match button background */
-    }
-    p {
-      font-size: 24px;
-      margin-bottom: 40px;
-    }
-    input {
-      padding: 10px;
-      font-size: 18px;
-      border-radius: 5px;
-      border: none;
-      margin-bottom: 20px;
-    }
-    button {
-      background-color: #0288d1;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      font-size: 20px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #01579b;
-    }
-    #leaderboard {
-      margin-top: 30px;
-      background-color: rgba(255, 255, 255, 0.8);
-      color: black;
-      padding: 20px;
-      border-radius: 10px;
-      width: 300px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    #leaderboard h2 {
-      margin: 0 0 10px 0;
-    }
-    #leaderboard ul {
-      list-style-type: none;
-      padding: 0;
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: linear-gradient(#7cb342, #e0c097); /* grass to sand */
+      border: 3px solid #555;
     }
   </style>
 </head>
 <body>
-  <h1>Snell's Law Game Challenge</h1>
-  <p>Enter your name to start playing!</p>
-  <input type="text" id="playerName" placeholder="Your Name" />
-  <button onclick="startGame()">Start Game</button>
-
-  <div id="leaderboard">
-    <h2>Top Scores</h2>
-    <ul id="scoreList">
-      <!-- Scores will be dynamically added here -->
-    </ul>
-  </div>
-
+  <canvas id="gameCanvas" width="800" height="500"></canvas>
   <script>
-    // Function to set a cookie
-    function setCookie(name, value, days) {
-      const expires = new Date(Date.now() + days * 864e5).toUTCString();
-      document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
-    }
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
 
-    // Function to get a cookie
-    function getCookie(name) {
-      return document.cookie.split('; ').reduce((r, v) => {
-        const parts = v.split('=');
-        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
-      }, '');
-    }
+    const ball = {
+      x: 100,
+      y: 450,
+      radius: 10,
+      color: 'red',
+      vx: 0,
+      vy: 0,
+      inSand: false,
+      launched: false
+    };
 
-    // Function to display the leaderboard
-    function displayLeaderboard() {
-      const scoreList = document.getElementById('scoreList');
-      scoreList.innerHTML = ""; // Clear existing scores
+    const sandZone = {
+      x: 0,
+      y: 200,
+      width: 800,
+      height: 100
+    };
 
-      // Get scores from cookies
-      const scores = JSON.parse(getCookie('scores') || '[]');
+    let mouse = { x: 0, y: 0, down: false };
 
-      // Sort scores in descending order
-      scores.sort((a, b) => b.score - a.score);
+    canvas.addEventListener('mousedown', (e) => {
+      if (!ball.launched) {
+        mouse.down = true;
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
+      }
+    });
 
-      // Display top 3 scores
-      for (let i = 0; i < Math.min(3, scores.length); i++) {
-        const li = document.createElement('li');
-        li.textContent = `${scores[i].name}: ${scores[i].score}`;
-        scoreList.appendChild(li);
+    canvas.addEventListener('mouseup', (e) => {
+      if (mouse.down && !ball.launched) {
+        mouse.down = false;
+        const rect = canvas.getBoundingClientRect();
+        const dx = (e.clientX - rect.left) - ball.x;
+        const dy = (e.clientY - rect.top) - ball.y;
+        ball.vx = dx * 0.05;
+        ball.vy = dy * 0.05;
+        ball.launched = true;
+      }
+    });
+
+    function update() {
+      if (ball.launched) {
+        // Check if inside sand zone
+        const wasInSand = ball.inSand;
+        ball.inSand =
+          ball.y > sandZone.y && ball.y < sandZone.y + sandZone.height;
+
+        if (!wasInSand && ball.inSand) {
+          // Entering sand (denser medium)
+          ball.vx *= 0.6;
+          ball.vy *= 0.6;
+        } else if (wasInSand && !ball.inSand) {
+          // Exiting sand (into faster medium)
+          ball.vx *= 1.5;
+          ball.vy *= 1.5;
+        }
+
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        // Bounce off walls
+        if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+          ball.vx *= -1;
+        }
+        if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+          ball.vy *= -1;
+        }
       }
     }
 
-    // Function to start the game
-    function startGame() {
-      const playerName = document.getElementById('playerName').value;
-      if (playerName) {
-        // Set the player name cookie
-        setCookie('playerName', playerName, 7); // Store player name for 7 days
-        setCookie('playerScore', 0, 7); // Initialize score to 0
-        window.location.href = 'app.html'; // Change to your game page filename
-      } else {
-        alert("Please enter your name!");
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw sand zone
+      ctx.fillStyle = '#f4e2b8';
+      ctx.fillRect(sandZone.x, sandZone.y, sandZone.width, sandZone.height);
+
+      // Draw ball
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      ctx.fillStyle = ball.color;
+      ctx.fill();
+      ctx.closePath();
+
+      // Draw launch direction
+      if (mouse.down && !ball.launched) {
+        ctx.beginPath();
+        ctx.moveTo(ball.x, ball.y);
+        ctx.lineTo(mouse.x, mouse.y);
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.closePath();
       }
+
+      // Label zones
+      ctx.fillStyle = 'black';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('Fast Medium (e.g. Grass)', 10, 30);
+      ctx.fillText('Slow Medium (e.g. Sand)', 10, sandZone.y + 20);
     }
 
-    // Display the leaderboard on page load
-    displayLeaderboard();
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
   </script>
 </body>
 </html>
